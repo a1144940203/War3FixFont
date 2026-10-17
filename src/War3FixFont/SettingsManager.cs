@@ -15,7 +15,9 @@ public class SettingsManager
 
     public void Load(string path = null)
     {
-        _path = new FileInfo(path ?? _exe + ".json").FullName;
+        // 从快捷方式或提权启动时工作目录可能改变，配置始终与程序放在一起。
+        var directory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        _path = new FileInfo(path ?? Path.Combine(directory, _exe + ".json")).FullName;
         if (File.Exists(_path))
         {
             var json = File.ReadAllText(_path);

@@ -21,7 +21,8 @@ namespace War3FixFont
             }
             else
             {
-                MessageBox.Show("程序已经运行", "魔兽争霸3叠字修复", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                // 已有后台实例时直接结束，避免重复修复和弹出提示。
+                return;
             }
         }
     }

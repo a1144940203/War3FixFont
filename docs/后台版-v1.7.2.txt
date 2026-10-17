@@ -1,0 +1,61 @@
+War3FixFont 后台版 1.7.2 — 更新与使用说明
+更新日期：2026-10-17
+
+一、直接运行
+发布页：https://github.com/a1144940203/War3FixFont/releases/tag/v1.7.2
+完整压缩包：War3FixFont-v1.7.2-background.zip
+解压后双击 War3FixFont.exe，保留同目录的 War3FixFont.exe.config 和 LICENSE。
+沿用 Windows、.NET Framework 4.8 与管理员权限要求；系统 UAC 确认后直接进入后台。
+先开工具或先开游戏均可，游戏未启动时工具会等待。
+
+二、本次更新
+1. 双击后只显示系统托盘图标，主窗口不弹出、不占任务栏。
+2. 默认立即尝试修复一次，之后每 60 秒自动修复。
+3. 修复原版启动时“定时修复”已勾选，但定时器没有真正开启的问题。
+4. 关闭设置窗口或最小化后继续后台工作，托盘右键“退出”才会结束。
+5. 重复双击时保留已有实例，直接结束新实例，不再弹出重复运行提示。
+6. 定时间隔支持 1–86400 秒，可加载大于原界面上限 100 秒的配置。
+7. 定时开关、间隔、快捷键和窗口选项保存后恢复，主动暂停后下次启动仍保持暂停。
+8. 定时修复通过界面消息循环执行；退出时停止并释放定时器、托盘图标、快捷键与窗口钩子，并解除鼠标范围限制。
+9. 快捷键冲突通过托盘通知提示，避免启动被模态错误窗口阻塞。
+10. 配置固定保存在程序目录，应用内说明补充后台操作方法。
+
+三、日常操作
+显示设置：左键点击托盘图标、托盘右键“显示”，或默认 Ctrl + Q。
+手动修复：设置窗口“修复一次”，或默认 Shift + Alt + D。
+暂停或恢复自动修复：取消或勾选“定时修复”。
+返回后台：关闭设置窗口或最小化。
+退出：托盘右键“退出”。
+图标可能位于 Windows 托盘的“显示隐藏的图标”区域。
+设置文件：程序旁的 War3FixFont.json，首次运行时自动生成。
+本版不自动设置开机启动。
+
+四、独立仓库文件
+src/War3FixFont/：应用源码、资源和项目文件。
+War3FixFont.sln：解决方案。
+build.ps1：构建脚本，通过 PATH 或 vswhere 查找 Visual Studio MSBuild。
+tests/BackgroundRegression.ps1：使用隔离配置的后台回归脚本。
+tests/BackgroundRegression.results.txt：53 项后台检查结果。
+CHANGELOG.md：更新记录。
+RELEASE_NOTES.md：本次发布说明。
+LICENSE：原作者 MIT 许可证。
+
+五、编译和验证
+在独立仓库根目录运行：
+.\build.ps1
+powershell.exe -NoProfile -STA -ExecutionPolicy Bypass -File .\tests\BackgroundRegression.ps1 -ExecutablePath .\src\War3FixFont\bin\Release\War3FixFont.exe
+
+需要 Visual Studio 2022 Build Tools 的 .NET 桌面构建工具。
+NuGet 提供 .NET Framework 4.8 引用程序集。
+默认输出：src/War3FixFont/bin/Release/War3FixFont.exe。
+
+Release 构建通过，53 项后台回归检查通过。检查覆盖隐藏启动、真实消息循环中的定时触发、配置保存与恢复、不同工作目录、托盘显示、关闭隐藏、最小化、重复实例与退出清理。
+检查使用隔离配置，未启动游戏。真实游戏中的叠字改善效果仍需观察验证。
+原 Costura 依赖仍有 System.Runtime / System.Reflection 版本冲突警告，未阻止本次构建与后台检查。
+
+六、来源和许可
+上游：https://github.com/Zonciu/War3FixFont
+基础提交：596bd5d139b2c94a369e8ccead97c26965d1f2a2
+上游版本：1.7.1；本分支版本：1.7.2。
+原修复原理沿用 WinAPI 调整窗口大小刷新画面。
+保留原作者 Zonciu Liang 的版权声明，MIT 许可证原文见仓库根目录 LICENSE。分发时请保留许可证。

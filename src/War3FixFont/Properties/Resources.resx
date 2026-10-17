@@ -118,7 +118,14 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="Manual" xml:space="preserve">
-    <value>窗口模式：
+    <value>后台运行：
+
+双击启动后自动在系统托盘运行，默认立即修复一次，随后每60秒修复。
+左键点击托盘图标或按 Ctrl + Q 可显示设置。
+关闭或最小化设置窗口后继续后台运行；右键托盘图标选择“退出”结束程序。
+定时修复开关和间隔会保存，暂停后下次启动仍保持暂停。
+
+窗口模式：
 
 1. 无边框全屏: 把游戏设为无边框全屏，每次修复增加1像素宽度，再减1像素宽度。
       

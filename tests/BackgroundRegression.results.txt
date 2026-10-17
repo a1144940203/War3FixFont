@@ -1,0 +1,54 @@
+PASS: a second instance returns without a modal dialog; exit=0, stderr=
+PASS: the first Application.Run display request leaves the form hidden
+PASS: the background form has no taskbar button
+PASS: the hidden main form has a window handle
+PASS: the notification-area icon is available at startup
+PASS: repair starts on first launch with the default enabled setting
+PASS: an existing interval greater than 100 seconds loads and starts correctly
+PASS: the interval input accepts 1 through 86400 seconds
+PASS: enabled repair makes an immediate repair attempt
+PASS: configuration stays beside the executable when the working directory differs
+PASS: the hidden message loop executes a real one-second repair timer tick
+PASS: a running repair timer keeps the settings window hidden
+PASS: disabling repair stops its timer
+PASS: disabled repair is saved to the isolated configuration
+PASS: an interval change is saved while repair is disabled
+PASS: tray Exit disposes the form
+PASS: tray Exit stops the repair timer
+PASS: tray Exit stops the process monitor
+PASS: tray Exit removes the notification-area icon
+PASS: tray Exit destroys the hotkey message window
+PASS: tray Exit closes the main form and ends its message loop
+PASS: the first Application.Run display request leaves the form hidden
+PASS: the background form has no taskbar button
+PASS: the hidden main form has a window handle
+PASS: the notification-area icon is available at startup
+PASS: a saved disabled repair setting remains disabled after restart
+PASS: disabled repair does not make an immediate repair attempt
+PASS: a saved interval is restored after restart
+PASS: tray Show displays the settings window and taskbar button
+PASS: the X button hides the form while keeping the application alive
+PASS: the tray icon remains available after closing settings
+PASS: minimizing settings returns the application to the tray
+PASS: tray Show restores a minimized settings window
+PASS: enabling repair uses the restored interval
+PASS: enabled repair is saved
+PASS: closing settings keeps enabled background repair running
+PASS: tray Exit disposes the form
+PASS: tray Exit stops the repair timer
+PASS: tray Exit stops the process monitor
+PASS: tray Exit removes the notification-area icon
+PASS: tray Exit destroys the hotkey message window
+PASS: tray Exit closes the main form and ends its message loop
+PASS: the first Application.Run display request leaves the form hidden
+PASS: the background form has no taskbar button
+PASS: the hidden main form has a window handle
+PASS: the notification-area icon is available at startup
+PASS: saved enabled repair resumes automatically after restart
+PASS: tray Exit disposes the form
+PASS: tray Exit stops the repair timer
+PASS: tray Exit stops the process monitor
+PASS: tray Exit removes the notification-area icon
+PASS: tray Exit destroys the hotkey message window
+PASS: tray Exit closes the main form and ends its message loop
+RESULT: 53 checks passed.

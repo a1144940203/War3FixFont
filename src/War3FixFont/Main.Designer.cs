@@ -140,6 +140,8 @@ partial class Main
             // 
             this.IntervalInput.Location = new System.Drawing.Point(93, 47);
             this.IntervalInput.Margin = new System.Windows.Forms.Padding(0);
+            this.IntervalInput.Minimum = 1;
+            this.IntervalInput.Maximum = 86400;
             this.IntervalInput.Name = "IntervalInput";
             this.IntervalInput.Size = new System.Drawing.Size(54, 21);
             this.IntervalInput.TabIndex = 16;
@@ -390,7 +392,7 @@ partial class Main
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.Name = "Main";
-            this.Text = "魔兽争霸3叠字修复";
+            this.Text = "魔兽争霸3叠字修复（后台版）";
             this.SizeChanged += new System.EventHandler(this.Main_SizeChanged);
             ((System.ComponentModel.ISupportInitialize)(this.IntervalInput)).EndInit();
             this.PanelMenu.ResumeLayout(false);

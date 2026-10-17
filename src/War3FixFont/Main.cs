@@ -15,7 +15,8 @@ public partial class Main : Form
 {
     private readonly KeyboardHook _hook = new();
 
-    private readonly Timer _timer = new();
+    // 在消息循环中执行，退出和重设间隔不会与后台线程上的修复回调竞争。
+    private readonly System.Windows.Forms.Timer _timer = new();
 
     private const string Url = "https://github.com/Zonciu/War3FixFont";
 
@@ -68,6 +69,12 @@ public partial class Main : Form
 
     private readonly bool _inited;
 
+    private bool _allowShow;
+
+    private bool _exitRequested;
+
+    private volatile bool _shuttingDown;
+
     private static API.WinEventProc _lockCursorCallback;
 
     public Main()
@@ -81,11 +88,12 @@ public partial class Main : Form
         VersionLabel.Text = @$"v{Application.ProductVersion}";
 
         _hook.KeyPressed += HotKeyEvent;
-        _timer.Elapsed += TimerFix;
+        _timer.Tick += TimerFix;
 
         // 读取定时配置
         var interval = Settings.TimerInterval;
-        IntervalInput.Value = interval > 0 ? interval : 60;
+        IntervalInput.Value = Math.Max((int)IntervalInput.Minimum, Math.Min(interval, (int)IntervalInput.Maximum));
+        Settings.TimerInterval = (int)IntervalInput.Value;
         EnableTimerFixCheckBox.Checked = Settings.UseTimer;
 
         // 读取窗口配置
@@ -173,19 +181,60 @@ public partial class Main : Form
 
         SettingsManager.Save();
         _inited = true;
+        ShowInTaskbar = false;
+        UpdateTimer();
+        if (Settings.UseTimer)
+        {
+            FixFont(false);
+        }
     }
 
     /// <summary>
-    /// 关闭程序
+    /// 启动时只创建隐藏句柄，避免主窗口闪现；托盘仍可随时显示设置。
     /// </summary>
-    /// <param name="e"></param>
-    protected override void OnClosing(CancelEventArgs e)
+    protected override void SetVisibleCore(bool value)
     {
+        if (value && !_allowShow)
+        {
+            if (!IsHandleCreated)
+            {
+                CreateHandle();
+            }
+
+            value = false;
+        }
+
+        base.SetVisibleCore(value);
+    }
+
+    /// <summary>
+    /// 关闭设置窗口继续后台运行；托盘退出和系统关机才结束进程。
+    /// </summary>
+    protected override void OnFormClosing(FormClosingEventArgs e)
+    {
+        if (e.CloseReason == CloseReason.UserClosing && !_exitRequested)
+        {
+            e.Cancel = true;
+            HideWindow();
+            base.OnFormClosing(e);
+            return;
+        }
+
+        base.OnFormClosing(e);
+        if (e.Cancel)
+        {
+            return;
+        }
+
+        _shuttingDown = true;
+        _timer.Stop();
+        _timer.Dispose();
         _war3RunningMonitor.Stop();
+        _war3RunningMonitor.Dispose();
+        NotifyIcon.Visible = false;
         UnlockCursor();
         SettingsManager.Save();
         _hook.Dispose();
-        base.OnClosing(e);
     }
 
     /// <summary>
@@ -248,7 +297,7 @@ public partial class Main : Form
     /// </summary>
     private void ResetTimer()
     {
-        if (Settings.UseTimer)
+        if (!_shuttingDown && Settings.UseTimer)
         {
             _timer.Stop();
             _timer.Start();
@@ -260,6 +309,11 @@ public partial class Main : Form
     /// </summary>
     private void FixFont(bool resetTimer)
     {
+        if (_shuttingDown)
+        {
+            return;
+        }
+
         if (Interlocked.CompareExchange(ref _locker, LOCKED, UNLOCKED) != UNLOCKED)
         {
             return;
@@ -276,7 +330,7 @@ public partial class Main : Form
         }
         catch (Exception e)
         {
-            MessageBox.Show($@"叠字修复时异常: {e.Message}");
+            ShowNotification($@"叠字修复时异常: {e.Message}");
         }
         finally
         {
@@ -310,7 +364,7 @@ public partial class Main : Form
             }
             else
             {
-                MessageBox.Show("注册修复快捷键失败");
+                ShowNotification("注册修复快捷键失败，定时修复仍可使用。请从托盘打开设置更换快捷键。");
             }
         }
     }
@@ -344,12 +398,7 @@ public partial class Main : Form
 
         Settings.TimerInterval = (int)IntervalInput.Value;
         SettingsManager.Save();
-        if (_timer.Enabled)
-        {
-            _timer.Stop();
-            _timer.Interval = (int)(IntervalInput.Value * 1000);
-            _timer.Start();
-        }
+        UpdateTimer();
     }
 
     /// <summary>
@@ -366,22 +415,22 @@ public partial class Main : Form
 
         Settings.UseTimer = EnableTimerFixCheckBox.Checked;
         SettingsManager.Save();
-        if (!EnableTimerFixCheckBox.Checked)
-        {
-            if (_timer.Enabled)
-            {
-                _timer.Stop();
-            }
-        }
-        else
-        {
-            if (_timer.Enabled)
-            {
-                _timer.Stop();
-            }
+        UpdateTimer();
+    }
 
-            _timer.Interval = (int)(IntervalInput.Value * 1000);
-            _timer.Start();
+    private void UpdateTimer()
+    {
+        _timer.Stop();
+        _timer.Interval = Settings.TimerInterval * 1000;
+        _timer.Enabled = Settings.UseTimer;
+        NotifyIcon.Text = Settings.UseTimer ? "魔兽3叠字修复 - 后台定时修复中" : "魔兽3叠字修复 - 定时修复已暂停";
+    }
+
+    private void ShowNotification(string message)
+    {
+        if (!_shuttingDown)
+        {
+            NotifyIcon.ShowBalloonTip(5000, "魔兽3叠字修复", message, ToolTipIcon.Warning);
         }
     }
 
@@ -480,11 +529,13 @@ public partial class Main : Form
 
     private void ExitApplication(object sender, EventArgs e)
     {
+        _exitRequested = true;
         Close();
     }
 
     private void ShowWindow()
     {
+        _allowShow = true;
         ShowInTaskbar = true;                 //设置程序允许显示在任务栏
         Visible = true;                       //设置窗口可见
         WindowState = FormWindowState.Normal; //设置窗口状态
@@ -561,12 +612,12 @@ public partial class Main : Form
             }
             else
             {
-                MessageBox.Show("注册显示窗口快捷键失败");
+                ShowNotification("注册显示窗口快捷键失败，请从托盘打开设置更换快捷键。");
             }
         }
         else
         {
-            MessageBox.Show("显示窗口快捷键无效");
+            ShowNotification("显示窗口快捷键无效，请从托盘打开设置更换快捷键。");
         }
     }
 
@@ -606,7 +657,7 @@ public partial class Main : Form
     /// <param name="e"></param>
     private void CheckWar3Process(object sender, ElapsedEventArgs e)
     {
-        if (!Settings.AutoApplyWindow)
+        if (_shuttingDown || !Settings.AutoApplyWindow)
         {
             return;
         }
@@ -621,7 +672,10 @@ public partial class Main : Form
             async () =>
             {
                 await Task.Delay(800);
-                Apply();
+                if (!_shuttingDown && Settings.AutoApplyWindow)
+                {
+                    Apply();
+                }
             });
     }
 
@@ -686,6 +740,8 @@ public partial class Main : Form
             API.UnhookWinEvent(_winEventHook);
             _winEventHook = IntPtr.Zero;
         }
+
+        API.ClipCursor(IntPtr.Zero);
     }
 
     #endregion
